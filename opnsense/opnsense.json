@@ -1,0 +1,176 @@
+{
+  "variables": {
+
+    "vm_name":"opnsense",
+    "vm_description":"opnsense firewall router",
+
+    "disk_size": "8192",
+    "memory": "8192",
+
+    "ssh_user": "root",
+    "ssh_password": "opnsense",
+
+    "shutdown_command": "sudo shutdown -p now",
+
+    "master_dir": "./opnsense",
+
+    "headless": "true",
+
+    "boot_wait": "5m",
+
+    "boot_command": "root<enter><wait5>opnsense<enter><wait5>1<enter><wait5>n<enter><wait5>em0<enter><wait5><enter><wait5><enter><wait5>y<enter><wait20>",
+
+    "old_boot_command":"installer<enter><wait10>opnsense<enter><wait20><enter><wait10><enter><wait10><enter><wait10><enter><wait10><enter><wait480>{{user `ssh_password`}}<tab><wait5>{{user `ssh_password`}}<tab><enter><wait10><enter><wait120>{{user `ssh_user`}}<enter><wait5>{{user `ssh_password`}}<enter><wait10>2<enter><wait10>y<enter><wait10>N<enter><wait10><enter><wait10>N<enter><wait30>8<enter><wait10>sed -i -e 's/<ssh>/<ssh><group>admins<\\/group><noauto>1<\\/noauto><interfaces\\/><enabled>enabled<\\/enabled><passwordauth>1<\\/passwordauth><permitrootlogin>1<\\/permitrootlogin>/g' /conf/config.xml<enter><wait10>reboot<enter><wait20>",
+
+    "interfaceWan": "vtnet1",
+    "interfaceConf": "vtnet0"
+  },
+
+
+
+  "builders": [
+
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+
+      "type": "vmware-iso",
+      "output_directory": "output-vmware/{{user `vm_name`}}",
+      "guest_os_type": "other5xlinux-64",
+      "version": 16,
+
+
+      "iso_url": "{{user `opnsense_iso_url`}}",
+      "iso_checksum": "{{user `opnsense_iso_checksum`}}",
+
+      "boot_command": "{{user `boot_command`}}",
+
+      "boot_wait": "{{user `boot_wait`}}",
+      "shutdown_timeout": "2m",
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "ssh",
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_timeout": "8m",
+
+
+      "cpus": 2,
+      "cores": 2,
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}"
+    },
+
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+
+      "type": "virtualbox-iso",
+      "output_directory": "output-virtualbox/{{user `vm_name`}}",
+      "guest_os_type": "FreeBSD_64",
+      "guest_additions_mode": "attach",
+
+
+      "iso_url": "{{user `opnsense_iso_url`}}",
+      "iso_checksum": "{{user `opnsense_iso_checksum`}}",
+
+      "boot_command": "{{user `boot_command`}}",
+
+      "boot_wait": "{{user `boot_wait`}}",
+      "shutdown_timeout": "2m",
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "ssh",
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_wait_timeout": "8m",
+
+
+      "cpus": 2,
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--vram", "64"]
+      ]
+    },
+
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+
+      "type": "qemu",
+      "output_directory": "output-qemu/{{user `vm_name`}}",
+
+
+      "iso_url": "{{user `opnsense_iso_url`}}",
+      "iso_checksum": "{{user `opnsense_iso_checksum`}}",
+      
+      "boot_command": "{{user `boot_command`}}",
+
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "ssh",
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_timeout": "8m",
+
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+      "format": "qcow2",
+      "accelerator": "kvm",
+      "net_device": "virtio-net",
+      "disk_interface": "virtio",
+      "boot_wait": "{{user `boot_wait`}}",
+
+      "cpus": 4,
+
+      "qemuargs": [
+        [ "-drive", "file=output-qemu/{{user `vm_name`}}/{{ .Name }},if=virtio,cache=writeback,discard=ignore,format=qcow2,index=1" ]
+      ]
+    }
+    
+  ],
+            
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo pkg install -y open-vm-tools-nox11",
+        "echo -e '\n\nvmware_guest_vmblock_enable=\"YES\"\nvmware_guest_vmhgfs_enable=\"NO\"\nvmware_guest_vmmemctl_enable=\"YES\nvmware_guest_vmxnet_enable=\"YES\"\nvmware_guestd_enable=\"YES\"' | sudo tee -a /etc/defaults/rc.conf"
+      ],
+      "only": ["vmware-iso"],
+      "execute_command": "sh -c {{ .Path }}"
+    },
+    {
+      "type": "file",
+      "source": "opnsense/conf/config.xml",
+      "destination": "/conf/config.xml"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sed -i -e 's/interfaceWan/{{ user `interfaceWan` }}/g' /conf/config.xml",
+        "sed -i -e 's/interfaceConf/{{ user `interfaceConf` }}/g' /conf/config.xml"
+      ],
+      "execute_command": "sh -c {{ .Path }}"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "shell-local",
+      "execute_command": "mv output-qemu/{{user `vm_name`}}/{{user `vm_name`}} output-qemu/{{user `vm_name`}}/{{user `vm_name`}}.qcow2",
+      "only": ["qemu"],
+      "inline": "mv output-qemu/{{user `vm_name`}}/{{user `vm_name`}} output-qemu/{{user `vm_name`}}/{{user `vm_name`}}.qcow2"
+    }
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "variables": {
+    "vm_name": "Win2019GUI",
+    "vm_description": "Windows Server 2019 datacenter GUI",
+
+    "disk_size": "16384",
+    "memory": "8192",
+
+    "winrm_user": "Administrator",
+    "winrm_password": "V@grant1",
+
+    "shutdown_command": "c:\\windows\\system32\\sysprep\\sysprep.exe /generalize /oobe /mode:vm /shutdown /unattend:c:\\unattend.xml",
+
+    "master_dir": "win",
+
+    "headless": "true",
+    
+    "boot_wait": "2m"
+  },
+
+  "builders": [
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+      "type": "vmware-iso",
+      "output_directory": "output-vmware/{{user `vm_name`}}",
+      "guest_os_type": "windows9srv-64",
+      "tools_upload_flavor": "windows",
+      "tools_upload_path": "c:\\Windows\\Temp\\vmware-tools.iso",
+      "version": 16,
+
+      "iso_url": "{{user `win2019_iso_url`}}",
+      "iso_checksum": "{{user `win2019_iso_checksum`}}",
+
+      "boot_wait": "{{user `boot_wait`}}",
+      "shutdown_timeout": "2m",
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "winrm",
+      "winrm_username": "{{user `winrm_user`}}",
+      "winrm_password": "{{user `winrm_password`}}",
+      "winrm_timeout": "15m",
+
+      "cpus": 2,
+      "cores": 2,
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+      "disk_adapter_type": "sata",
+
+      "floppy_files": [
+        "{{user `master_dir`}}/answer/2019/autounattend.xml",
+        "{{user `master_dir`}}/answer/unattend_sysprep.xml",
+        "{{user `master_dir`}}/scripts/disable-network-discovery.cmd",
+        "{{user `master_dir`}}/scripts/disable-winrm.ps1",
+        "{{user `master_dir`}}/scripts/enable-rdp.cmd",
+        "{{user `master_dir`}}/scripts/enable-winrm.ps1",
+        "{{user `master_dir`}}/scripts/install-tools.ps1",
+        "{{user `master_dir`}}/scripts/set-temp.ps1"
+      ]
+    },
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+      "type": "virtualbox-iso",
+      "output_directory": "output-virtualbox/{{user `vm_name`}}",
+      "guest_os_type": "Windows2019_64",
+      "guest_additions_mode": "attach",
+
+      "iso_url": "{{user `win2019_iso_url`}}",
+      "iso_checksum": "{{user `win2019_iso_checksum`}}",
+
+      "boot_wait": "{{user `boot_wait`}}",
+      "shutdown_timeout": "2m",
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "winrm",
+      "winrm_username": "{{user `winrm_user`}}",
+      "winrm_password": "{{user `winrm_password`}}",
+      "winrm_timeout": "20m",
+
+      "cpus": 2,
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+
+      "vboxmanage": [["modifyvm", "{{.Name}}", "--vram", "64"]],
+
+      "floppy_files": [
+        "{{user `master_dir`}}/answer/2019/autounattend.xml",
+        "{{user `master_dir`}}/answer/unattend_sysprep.xml",
+        "{{user `master_dir`}}/scripts/disable-network-discovery.cmd",
+        "{{user `master_dir`}}/scripts/disable-winrm.ps1",
+        "{{user `master_dir`}}/scripts/enable-rdp.cmd",
+        "{{user `master_dir`}}/scripts/enable-winrm.ps1",
+        "{{user `master_dir`}}/scripts/install-tools.ps1",
+        "{{user `master_dir`}}/scripts/set-temp.ps1"
+      ]
+    },
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+      "type": "qemu",
+      "output_directory": "output-qemu/{{user `vm_name`}}",
+
+      "iso_url": "{{user `win2019_iso_url`}}",
+      "iso_checksum": "{{user `win2019_iso_checksum`}}",
+
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "winrm",
+      "winrm_username": "{{user `winrm_user`}}",
+      "winrm_password": "{{user `winrm_password`}}",
+      "winrm_timeout": "50m",
+
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+      "format": "qcow2",
+      "accelerator": "kvm",
+      "net_device": "virtio-net",
+      "disk_interface": "virtio",
+      "boot_wait": "{{user `boot_wait`}}",
+
+      "cpus": 4,
+
+      "qemuargs": [
+        ["-drive", "file=cache/qemu/virtio-win.iso,media=cdrom,index=3"],
+        [
+          "-drive",
+          "file=output-qemu/{{user `vm_name`}}/{{ .Name }},if=virtio,cache=writeback,discard=ignore,format=qcow2,index=1"
+        ]
+      ],
+
+      "floppy_files": [
+        "{{user `master_dir`}}/answer/2019/autounattend.xml",
+        "{{user `master_dir`}}/answer/unattend_sysprep.xml",
+        "{{user `master_dir`}}/scripts/disable-network-discovery.cmd",
+        "{{user `master_dir`}}/scripts/disable-winrm.ps1",
+        "{{user `master_dir`}}/scripts/enable-rdp.cmd",
+        "{{user `master_dir`}}/scripts/enable-winrm.ps1",
+        "{{user `master_dir`}}/scripts/install-tools.ps1",
+        "{{user `master_dir`}}/scripts/set-temp.ps1"
+      ]
+    }
+  ],
+
+  "provisioners": [
+    {
+      "type": "windows-shell",
+      "inline": "powershell.exe -File a:\\install-tools.ps1"
+    },
+    {
+      "type": "windows-shell",
+      "inline": "ipconfig"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "shell-local",
+      "execute_command": "mv output-qemu/{{user `vm_name`}}/{{user `vm_name`}} output-qemu/{{user `vm_name`}}/{{user `vm_name`}}.qcow2",
+      "only": ["qemu"],
+      "inline": "mv output-qemu/{{user `vm_name`}}/{{user `vm_name`}} output-qemu/{{user `vm_name`}}/{{user `vm_name`}}.qcow2"
+    }
+  ]
+}

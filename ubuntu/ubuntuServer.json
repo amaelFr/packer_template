@@ -1,0 +1,182 @@
+{
+  "variables": {
+
+    "vm_name":"ubuntuServer",
+    "vm_description":"ubuntuServer",
+
+    "disk_size": "65536",
+    "memory": "8192",
+
+    "ssh_user": "vagrant",
+    "ssh_password": "V@grant1",
+
+    "shutdown_command": "sudo shutdown",
+
+    "master_dir": "./ubuntu",
+
+    "headless": "true",
+
+    "boot_wait": "5s",
+    "boot_command": "<enter><enter><f6><esc><wait> autoinstall ds=nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/<enter>"
+  },
+
+
+
+  "builders": [
+
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+
+      "type": "vmware-iso",
+      "output_directory": "output-vmware/{{user `vm_name`}}",
+      "guest_os_type": "ubuntu-64",
+      "version": 16,
+
+
+      "iso_url": "{{user `ubuntuServer_iso_url`}}",
+      "iso_checksum": "{{user `ubuntuServer_iso_checksum`}}",
+
+      "boot_command": "{{user `boot_command`}}",
+
+      "boot_wait": "{{user `boot_wait`}}",
+      "shutdown_timeout": "2m",
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "ssh",
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_timeout": "30m",
+      "ssh_handshake_attempts": "120",
+
+
+      "cpus": 2,
+      "cores": 2,
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+        
+      
+      "http_directory": "{{user `master_dir`}}/http"
+    },
+
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+
+      "type": "virtualbox-iso",
+      "output_directory": "output-virtualbox/{{user `vm_name`}}",
+      "guest_os_type": "RedHat_64",
+      "guest_additions_mode": "attach",
+
+
+      "iso_url": "{{user `ubuntuServer_iso_url`}}",
+      "iso_checksum": "{{user `ubuntuServer_iso_checksum`}}",
+
+      "boot_command": "{{user `boot_command`}}",
+
+      "boot_wait": "{{user `boot_wait`}}",
+      "shutdown_timeout": "2m",
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "ssh",
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_wait_timeout": "15m",
+
+
+      "cpus": 2,
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+        
+      
+      "http_directory": "{{user `master_dir`}}/http",
+
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--vram", "64"]
+      ]
+    },
+
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+
+      "type": "qemu",
+      "output_directory": "output-qemu/{{user `vm_name`}}",
+
+
+      "iso_url": "{{user `ubuntuServer_iso_url`}}",
+      "iso_checksum": "{{user `ubuntuServer_iso_checksum`}}",
+      
+      "boot_command": "{{user `boot_command`}}",
+
+      "shutdown_command": "{{user `shutdown_command`}}",
+      "shutdown_timeout": "2m",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "ssh",
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_timeout": "15m",
+
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+      "format": "qcow2",
+      "accelerator": "kvm",
+      "net_device": "virtio-net",
+      "disk_interface": "virtio",
+      "boot_wait": "{{user `boot_wait`}}",
+
+      "cpus": 4,
+        
+      
+      "http_directory": "{{user `master_dir`}}/http",
+
+      "qemuargs": [
+        [ "-drive", "file=output-qemu/{{user `vm_name`}}/{{ .Name }},if=virtio,cache=writeback,discard=ignore,format=qcow2,index=1" ]
+      ]
+    }
+    
+  ],
+            
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo apt update && sudo apt -y upgrade"
+      ],
+      "execute_command": "sh -c {{ .Path }}"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo apt install -y open-vm-tools"
+      ],
+      "only": ["vmware-iso"],
+      "execute_command": "sh -c {{ .Path }}"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo (mkdir -p /mnt/cdrom; mount /dev/cdrom /mnt/cdrom; /mnt/cdrom/VBoxLinuxAdditions.run )"
+      ],
+      "only": ["virtualbox-iso"],
+      "execute_command": "sh -c {{ .Path }}"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "shell-local",
+      "execute_command": "mv output-qemu/{{user `vm_name`}}/{{user `vm_name`}} output-qemu/{{user `vm_name`}}/{{user `vm_name`}}.qcow2",
+      "only": ["qemu"],
+      "inline": "mv output-qemu/{{user `vm_name`}}/{{user `vm_name`}} output-qemu/{{user `vm_name`}}/{{user `vm_name`}}.qcow2"
+    }
+  ]
+}

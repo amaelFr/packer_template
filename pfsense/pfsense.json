@@ -1,0 +1,195 @@
+{
+  "variables": {
+
+    "vm_name":"pfsense",
+    "vm_description":"pfsense firewall router",
+
+    "disk_size": "8192",
+    "memory": "8192",
+
+    "ssh_user": "root",
+    "ssh_password": "pfsense",
+
+    "shutdown_command": "sudo shutdown -p now",
+
+    "master_dir": "./pfsense",
+
+    "headless": "true",
+
+    "boot_wait": "2m",
+    "boot_command": "<enter><wait10><enter><wait10><enter><wait10><down><down><down><enter><wait10>S<enter><del><del>0<enter>><enter><wait10><enter><wait10><spacebar><enter><wait10><tab><enter><wait120><enter><wait10><enter><wait180>n<enter><wait10>{{user `pfsense_network_interface`}}<enter><wait10><enter><wait10>y<enter><wait120>14<enter><wait10>y<enter>",
+
+    "interfaceWan": "vtnet2",
+    "interfaceConf": "vtnet0"
+  },
+
+
+
+  "builders": [
+
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+
+      "type": "vmware-iso",
+      "output_directory": "output-vmware/{{user `vm_name`}}",
+      "guest_os_type": "other5xlinux-64",
+      "version": 16,
+
+
+      "iso_url": "{{user `pfsense_iso_url`}}",
+      "iso_checksum": "{{user `pfsense_iso_checksum`}}",
+
+      "boot_command": "{{user `boot_command`}}",
+
+      "boot_wait": "{{user `boot_wait`}}",
+      "shutdown_timeout": "2m",
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "ssh",
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_timeout": "8m",
+
+
+      "cpus": 2,
+      "cores": 2,
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}"
+    },
+
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+
+      "type": "virtualbox-iso",
+      "output_directory": "output-virtualbox/{{user `vm_name`}}",
+      "guest_os_type": "FreeBSD_64",
+      "guest_additions_mode": "attach",
+
+
+      "iso_url": "{{user `pfsense_iso_url`}}",
+      "iso_checksum": "{{user `pfsense_iso_checksum`}}",
+
+      "boot_command": "{{user `boot_command`}}",
+
+      "boot_wait": "{{user `boot_wait`}}",
+      "shutdown_timeout": "2m",
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "ssh",
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_wait_timeout": "20m",
+
+
+      "cpus": 2,
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--vram", "64"]
+      ]
+    },
+
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+
+      "type": "qemu",
+      "output_directory": "output-qemu/{{user `vm_name`}}",
+
+
+      "iso_url": "{{user `pfsense_iso_url`}}",
+      "iso_checksum": "{{user `pfsense_iso_checksum`}}",
+      
+      "boot_command": "{{user `boot_command`}}",
+
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "ssh",
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_timeout": "8m",
+
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+      "format": "qcow2",
+      "accelerator": "kvm",
+      "net_device": "virtio-net",
+      "disk_interface": "virtio",
+      "boot_wait": "{{user `boot_wait`}}",
+
+      "cpus": 4,
+
+      "qemuargs": [
+        [ "-drive", "file=output-qemu/{{user `vm_name`}}/{{ .Name }},if=virtio,cache=writeback,discard=ignore,format=qcow2,index=1" ]
+      ]
+    }
+    
+  ],
+            
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sed -i -e 's/enabled: no/enabled: yes/g' /usr/local/etc/pkg/repos/FreeBSD.conf",
+        "sed -i -e 's/enabled: no/enabled: yes/g' /usr/local/share/pfSense/pkg/repos/pfSense-repo.conf",
+        "pkg install -y bash sudo",
+        "echo -e '\n\n%wheel ALL=(ALL) ALL' >> /usr/local/etc/sudoers"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo pkg install -y open-vm-tools-nox11",
+        "echo -e '\n\nvmware_guest_vmblock_enable=\"YES\"\nvmware_guest_vmhgfs_enable=\"NO\"\nvmware_guest_vmmemctl_enable=\"YES\nvmware_guest_vmxnet_enable=\"YES\"\nvmware_guestd_enable=\"YES\"' | sudo tee -a /etc/defaults/rc.conf"
+      ],
+      "only": ["vmware-iso"],
+      "execute_command": "sh -c {{ .Path }}"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo pkg install -y emulators/virtualbox-ose-additions",
+        "echo -e '\n\nvvboxguest_enable=\"YES\"\nvboxservice_enable=\"YES\"' | sudo tee -a /etc/defaults/rc.conf"
+      ],
+      "only": ["virtualbox-iso"],
+      "execute_command": "sh -c {{ .Path }}"
+    },
+    {
+      "type": "file",
+      "source": "pfsense/conf/config.xml",
+      "destination": "/cf/conf/config.xml"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sed -i -e 's/interfaceWan/{{ user `interfaceWan` }}/g' /cf/conf/config.xml",
+        "sed -i -e 's/interfaceConf/{{ user `interfaceConf` }}/g' /cf/conf/config.xml",
+        "rm /tmp/config.cache"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": "ifconfig"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "shell-local",
+      "execute_command": "mv output-qemu/{{user `vm_name`}}/{{user `vm_name`}} output-qemu/{{user `vm_name`}}/{{user `vm_name`}}.qcow2",
+      "only": ["qemu"],
+      "inline": "mv output-qemu/{{user `vm_name`}}/{{user `vm_name`}} output-qemu/{{user `vm_name`}}/{{user `vm_name`}}.qcow2"
+    }
+  ]
+}

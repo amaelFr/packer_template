@@ -1,0 +1,193 @@
+{
+  "variables": {
+
+    "vm_name":"Oracle8",
+    "vm_description":"Oracle8",
+
+    "disk_size": "16384",
+    "memory": "8192",
+
+    "ssh_user": "vagrant",
+    "ssh_password": "V@grant1",
+
+    "shutdown_command": "sudo shutdown",
+
+    "master_dir": "./oracle",
+
+    "vmware_compatibility": "16",
+
+    "headless": "true",
+
+    "enter_install_mode":"<enter><wait240>",
+    "choose_defaut_language": "<tab><tab><enter><wait20>",
+    "change_keybord": "<tab><enter><wait10><tab><tab><tab><enter><wait5>French (AZERTY)<tab><tab><enter><right><enter><tab><tab><tab><enter><wait10>",
+    "choose_install_media": "<tab><tab><tab><enter><wait10><enter><wait10>",
+    "minimal_install": "<down><down><space>",
+    "choose_install_type": "<tab><tab><tab><tab><tab><tab><enter><wait10><tab><tab>{{user `minimal_install`}}<altTab><altTab><enter>",
+
+    "oracle8_iso_type": "boot",
+
+    "boot_wait": "10s",
+    "boot_command": "<tab><bs><bs><bs><bs><bs>text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-{{user `oracle8_iso_type`}}.cfg<enter><wait>"
+  },
+
+
+
+  "builders": [
+
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+
+      "type": "vmware-iso",
+      "output_directory": "output-vmware/{{user `vm_name`}}",
+      "guest_os_type": "oraclelinux8-64",
+      "version": "{{user `vmware_compatibility`}}",
+
+
+      "iso_url": "{{user `oracle8_iso_url`}}",
+      "iso_checksum": "{{user `oracle8_iso_checksum`}}",
+
+      "boot_command": "{{user `boot_command`}}",
+
+      "boot_wait": "{{user `boot_wait`}}",
+      "shutdown_timeout": "2m",
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "ssh",
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_timeout": "20m",
+
+
+      "cpus": 2,
+      "cores": 2,
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+        
+      
+      "http_directory": "{{user `master_dir`}}/http"
+    },
+
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+
+      "type": "virtualbox-iso",
+      "output_directory": "output-virtualbox/{{user `vm_name`}}",
+      "guest_os_type": "Oracle_64",
+      "guest_additions_mode": "attach",
+
+
+      "iso_url": "{{user `oracle8_iso_url`}}",
+      "iso_checksum": "{{user `oracle8_iso_checksum`}}",
+
+      "boot_command": "{{user `boot_command`}}",
+
+      "boot_wait": "{{user `boot_wait`}}",
+      "shutdown_timeout": "2m",
+      "shutdown_command": "{{user `shutdown_command`}}",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "ssh",
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_wait_timeout": "20m",
+
+
+      "cpus": 2,
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+        
+      
+      "http_directory": "{{user `master_dir`}}/http",
+
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--vram", "64"]
+      ]
+    },
+
+
+    {
+      "vm_name": "{{user `vm_name`}}",
+
+
+      "type": "qemu",
+      "output_directory": "output-qemu/{{user `vm_name`}}",
+
+
+      "iso_url": "{{user `oracle8_iso_url`}}",
+      "iso_checksum": "{{user `oracle8_iso_checksum`}}",
+      
+      "boot_command": "{{user `boot_command`}}",
+
+      "shutdown_command": "{{user `shutdown_command`}}",
+      "shutdown_timeout": "2m",
+
+      "headless": "{{user `headless`}}",
+
+      "communicator": "ssh",
+      "ssh_username": "{{user `ssh_user`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_timeout": "20m",
+
+      "memory": "{{user `memory`}}",
+      "disk_size": "{{user `disk_size`}}",
+      "format": "qcow2",
+      "accelerator": "kvm",
+      "net_device": "virtio-net",
+      "disk_interface": "virtio",
+      "boot_wait": "{{user `boot_wait`}}",
+
+      "cpus": 4,
+        
+      
+      "http_directory": "{{user `master_dir`}}/http",
+
+      "qemuargs": [
+        [ "-drive", "file=output-qemu/{{user `vm_name`}}/{{ .Name }},if=virtio,cache=writeback,discard=ignore,format=qcow2,index=1" ]
+      ]
+    }
+    
+  ],
+            
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo dnf install -y open-vm-tools"
+      ],
+      "only": ["vmware-iso"],
+      "execute_command": "sh -c {{ .Path }}"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo (mkdir -p /mnt/cdrom; mount /dev/cdrom /mnt/cdrom; /mnt/cdrom/VBoxLinuxAdditions.run )"
+      ],
+      "only": ["virtualbox-iso"],
+      "execute_command": "sh -c {{ .Path }}"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo dnf install -y qemu-guest-agent"
+      ],
+      "only": ["qemu"],
+      "execute_command": "sh -c {{ .Path }}"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "shell-local",
+      "execute_command": "mv output-qemu/{{user `vm_name`}}/{{user `vm_name`}} output-qemu/{{user `vm_name`}}/{{user `vm_name`}}.qcow2",
+      "only": ["qemu"],
+      "inline": "mv output-qemu/{{user `vm_name`}}/{{user `vm_name`}} output-qemu/{{user `vm_name`}}/{{user `vm_name`}}.qcow2"
+    }
+  ]
+}
