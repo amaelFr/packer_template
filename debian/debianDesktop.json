@@ -37,8 +37,8 @@
       "version": 16,
 
 
-      "iso_url": "{{user `debianDesktop_iso_url`}}",
-      "iso_checksum": "{{user `debianDesktop_iso_checksum`}}",
+      "iso_url": "{{user `debian_iso_url`}}",
+      "iso_checksum": "{{user `debian_iso_checksum`}}",
 
       "boot_command": "{{user `boot_command`}}",
 
@@ -74,8 +74,8 @@
       "guest_additions_mode": "attach",
 
 
-      "iso_url": "{{user `debianDesktop_iso_url`}}",
-      "iso_checksum": "{{user `debianDesktop_iso_checksum`}}",
+      "iso_url": "{{user `debian_iso_url`}}",
+      "iso_checksum": "{{user `debian_iso_checksum`}}",
 
       "boot_command": "{{user `boot_command`}}",
 
@@ -112,8 +112,8 @@
       "output_directory": "output-qemu/{{user `vm_name`}}",
 
 
-      "iso_url": "{{user `debianDesktop_iso_url`}}",
-      "iso_checksum": "{{user `debianDesktop_iso_checksum`}}",
+      "iso_url": "{{user `debian_iso_url`}}",
+      "iso_checksum": "{{user `debian_iso_checksum`}}",
       
       "boot_command": "{{user `boot_command`}}",
 
@@ -152,7 +152,8 @@
       "type": "shell",
       "inline": [
         "sudo apt update && sudo apt -y upgrade",
-        "sudo apt install -y  lxqt-core sddm"
+        "sudo apt install -y  lxqt-core sddm",
+        "sudo apt dist-upgrade -y"
       ],
       "execute_command": "sh -c {{ .Path }}"
     },

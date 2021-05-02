@@ -18,7 +18,7 @@
 
     "debian_preseed": "preseed_encrypted.cfg",
 
-    "partition_password":"V2grqnt&",
+    "partition_password":"V@grant1",
 
     "boot_wait": "5s",
     "boot_command": "<esc><wait>auto preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/{{user `debian_preseed`}}<wait><enter><wait5m>{{user `partition_password`}}<enter><wait10>{{user `partition_password`}}<enter><wait10m>{{user `partition_password`}}<enter>"
@@ -39,8 +39,8 @@
       "version": 16,
 
 
-      "iso_url": "{{user `debianServer_iso_url`}}",
-      "iso_checksum": "{{user `debianServer_iso_checksum`}}",
+      "iso_url": "{{user `debian_iso_url`}}",
+      "iso_checksum": "{{user `debian_iso_checksum`}}",
 
       "boot_command": "{{user `boot_command`}}",
 
@@ -75,8 +75,8 @@
       "guest_additions_mode": "attach",
 
 
-      "iso_url": "{{user `debianServer_iso_url`}}",
-      "iso_checksum": "{{user `debianServer_iso_checksum`}}",
+      "iso_url": "{{user `debian_iso_url`}}",
+      "iso_checksum": "{{user `debian_iso_checksum`}}",
 
       "boot_command": "{{user `boot_command`}}",
 
@@ -113,8 +113,8 @@
       "output_directory": "output-qemu/{{user `vm_name`}}",
 
 
-      "iso_url": "{{user `debianServer_iso_url`}}",
-      "iso_checksum": "{{user `debianServer_iso_checksum`}}",
+      "iso_url": "{{user `debian_iso_url`}}",
+      "iso_checksum": "{{user `debian_iso_checksum`}}",
       
       "boot_command": "{{user `boot_command`}}",
 
@@ -153,7 +153,8 @@
       "type": "shell",
       "inline": [
         "sudo apt update",
-        "sudo apt upgrade -y"
+        "sudo apt upgrade -y",
+        "sudo apt dist-upgrade -y"
       ],
       "execute_command": "sh -c {{ .Path }}"
     },
