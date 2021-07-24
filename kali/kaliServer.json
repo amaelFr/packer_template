@@ -7,10 +7,10 @@
     "disk_size": "49152",
     "memory": "8192",
 
-    "ssh_user": "vagrant",
+    "ssh_user": "root",
     "ssh_password": "V@grant1",
 
-    "shutdown_command": "sudo shutdown",
+    "shutdown_command": "shutdown",
 
     "master_dir": "./kali",
 
@@ -152,17 +152,26 @@
     {
       "type": "shell",
       "inline": [
-        "sudo apt update",
-        "sudo apt upgrade -y",
-        "sudo apt dist-upgrade -y",
-        "sudo apt install -y kali-linux-headless"
+        "sed -i '$d' /etc/ssh/sshd_config",
+        "apt update",
+        "apt upgrade -y",
+        "apt dist-upgrade -y",
+        "apt install -y kali-linux-headless"
       ],
       "execute_command": "sh -c {{ .Path }}"
     },
     {
       "type": "shell",
       "inline": [
-        "sudo (mkdir -p /mnt/cdrom; mount /dev/cdrom /mnt/cdrom; /mnt/cdrom/VBoxLinuxAdditions.run )"
+        "apt install -y open-vm-tools"
+      ],
+      "only": ["vmware-iso"],
+      "execute_command": "sh -c {{ .Path }}"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "mkdir -p /mnt/cdrom; mount /dev/cdrom /mnt/cdrom; /mnt/cdrom/VBoxLinuxAdditions.run"
       ],
       "only": ["virtualbox-iso"],
       "execute_command": "sh -c {{ .Path }}"

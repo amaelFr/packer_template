@@ -10,7 +10,7 @@
     "ssh_user": "root",
     "ssh_password": "V@grant1",
 
-    "shutdown_command": "passwd -d root && shutdown -p now",
+    "shutdown_command": "passwd -d root; passwd-l root; shutdown -p now",
 
     "master_dir": "./freebsd",
 

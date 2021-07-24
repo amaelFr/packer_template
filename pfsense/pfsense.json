@@ -17,9 +17,9 @@
     "headless": "true",
 
     "boot_wait": "2m",
-    "boot_command": "<enter><wait10><enter><wait10><enter><wait10><down><down><down><enter><wait10>S<enter><del><del>0<enter>><enter><wait10><enter><wait10><spacebar><enter><wait10><tab><enter><wait120><enter><wait10><enter><wait180>n<enter><wait10>{{user `pfsense_network_interface`}}<enter><wait10><enter><wait10>y<enter><wait120>14<enter><wait10>y<enter>",
-
-    "interfaceWan": "vtnet2",
+    "boot_command": "<enter><wait5><enter><wait5><enter><wait5><enter><wait5><enter><wait5><enter><wait5><spacebar><enter><tab><enter><wait120><enter><wait5><enter><wait120>n<enter><wait5>{{user `pfsense_network_interface`}}<enter><wait5><enter><wait5>y<enter><wait60>14<enter><wait10>y<enter>",
+    
+    "interfaceWan": "vtnet1",
     "interfaceConf": "vtnet0"
   },
 
@@ -52,7 +52,7 @@
       "communicator": "ssh",
       "ssh_username": "{{user `ssh_user`}}",
       "ssh_password": "{{user `ssh_password`}}",
-      "ssh_timeout": "8m",
+      "ssh_timeout": "20m",
 
 
       "cpus": 2,
@@ -119,7 +119,7 @@
       "communicator": "ssh",
       "ssh_username": "{{user `ssh_user`}}",
       "ssh_password": "{{user `ssh_password`}}",
-      "ssh_timeout": "8m",
+      "ssh_timeout": "20m",
 
       "memory": "{{user `memory`}}",
       "disk_size": "{{user `disk_size`}}",
@@ -174,14 +174,10 @@
     {
       "type": "shell",
       "inline": [
-        "sed -i -e 's/interfaceWan/{{ user `interfaceWan` }}/g' /cf/conf/config.xml",
         "sed -i -e 's/interfaceConf/{{ user `interfaceConf` }}/g' /cf/conf/config.xml",
+        "sed -i -e 's/interfaceWan/{{ user `interfaceWan` }}/g' /cf/conf/config.xml",
         "rm /tmp/config.cache"
       ]
-    },
-    {
-      "type": "shell",
-      "inline": "ifconfig"
     }
   ],
   "post-processors": [
