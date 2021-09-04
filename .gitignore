@@ -4,3 +4,4 @@ build
 cache
 vars.json
 packer.*
+*.iso

@@ -75,9 +75,7 @@
         "apt dist-upgrade -y",
         "apt install -y qemu-guest-agent",
         "apt install -y kali-linux-default {{user `kali_server_installation_type`}}",
-        "apt install -y cloud-init",
-        "deluser vagrant --force --remove-home",
-        "rm -f /etc/sudoers.d/vagrant"
+        "apt install -y cloud-init"
       ],
       "execute_command": "sh -c {{ .Path }}"
     }
