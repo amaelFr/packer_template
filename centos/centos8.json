@@ -144,11 +144,7 @@
       "cpus": 4,
         
       
-      "http_directory": "{{user `master_dir`}}/http",
-
-      "qemuargs": [
-        [ "-drive", "file=output-qemu/{{user `vm_name`}}/{{ .Name }},if=virtio,cache=writeback,discard=ignore,format=qcow2,index=1" ]
-      ]
+      "http_directory": "{{user `master_dir`}}/http"
     }
     
   ],
@@ -165,7 +161,7 @@
     {
       "type": "shell",
       "inline": [
-        "sudo (mkdir -p /mnt/cdrom; mount /dev/cdrom /mnt/cdrom; /mnt/cdrom/VBoxLinuxAdditions.run )"
+        "sudo sh -c 'mkdir -p /mnt/cdrom && (mount /dev/cdrom /mnt/cdrom || mount /dev/sr0 /mnt/cdrom || mount /dev/sr1 /mnt/cdrom) && (/mnt/cdrom/VBoxLinuxAdditions.run || [ $? -eq 2 ] && /sbin/rcvboxadd quicksetup all)'"
       ],
       "only": ["virtualbox-iso"],
       "execute_command": "sh -c {{ .Path }}"

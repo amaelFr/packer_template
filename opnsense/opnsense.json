@@ -94,11 +94,7 @@
 
       "cpus": 2,
       "memory": "{{user `memory`}}",
-      "disk_size": "{{user `disk_size`}}",
-
-      "vboxmanage": [
-        ["modifyvm", "{{.Name}}", "--vram", "64"]
-      ]
+      "disk_size": "{{user `disk_size`}}"
     },
 
 

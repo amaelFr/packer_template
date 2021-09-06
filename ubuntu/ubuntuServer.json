@@ -69,7 +69,7 @@
 
       "type": "virtualbox-iso",
       "output_directory": "output-virtualbox/{{user `vm_name`}}",
-      "guest_os_type": "RedHat_64",
+      "guest_os_type": "Debian_64",
       "guest_additions_mode": "attach",
 
 
@@ -95,11 +95,7 @@
       "disk_size": "{{user `disk_size`}}",
         
       
-      "http_directory": "{{user `master_dir`}}/http",
-
-      "vboxmanage": [
-        ["modifyvm", "{{.Name}}", "--vram", "64"]
-      ]
+      "http_directory": "{{user `master_dir`}}/http"
     },
 
 
@@ -165,7 +161,7 @@
     {
       "type": "shell",
       "inline": [
-        "sudo (mkdir -p /mnt/cdrom; mount /dev/cdrom /mnt/cdrom; /mnt/cdrom/VBoxLinuxAdditions.run )"
+        "sudo sh -c 'mkdir -p /mnt/cdrom && (mount /dev/cdrom /mnt/cdrom || mount /dev/sr0 /mnt/cdrom || mount /dev/sr1 /mnt/cdrom) && (/mnt/cdrom/VBoxLinuxAdditions.run || [ $? -eq 2 ] && /sbin/rcvboxadd quicksetup all)'"
       ],
       "only": ["virtualbox-iso"],
       "execute_command": "sh -c {{ .Path }}"

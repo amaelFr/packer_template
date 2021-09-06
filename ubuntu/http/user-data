@@ -5,7 +5,7 @@ autoinstall:
     keyboard:
         layout: fr
     identity:
-        hostname: ubuntu-hostname
+        hostname: vagrant-hostname
         password: '$6$rounds=4096$lJISCStd4UxReBU5$hlbBolwm8V35E77H9Mz01DnGxlvZFIHZ8HxzleX1qsBvPY44V3NFVYDVaszYPZ7J3txIOyrMkRJBGZiLyBlkV0'
         ## password: V@grant1
         username: vagrant

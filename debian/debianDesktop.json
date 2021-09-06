@@ -70,14 +70,14 @@
 
       "type": "virtualbox-iso",
       "output_directory": "output-virtualbox/{{user `vm_name`}}",
-      "guest_os_type": "RedHat_64",
+      "guest_os_type": "Debian_64",
       "guest_additions_mode": "attach",
 
 
       "iso_url": "{{user `debian_iso_url`}}",
       "iso_checksum": "{{user `debian_iso_checksum`}}",
 
-      "boot_command": "{{user `boot_command`}}",
+      "boot_command": "{{user `boot_command`}}<wait4m><enter>",
 
       "boot_wait": "{{user `boot_wait`}}",
       "shutdown_timeout": "2m",
@@ -168,7 +168,7 @@
     {
       "type": "shell",
       "inline": [
-        "sudo (mkdir -p /mnt/cdrom; mount /dev/cdrom /mnt/cdrom; /mnt/cdrom/VBoxLinuxAdditions.run )"
+        "sudo sh -c 'mkdir -p /mnt/cdrom && (mount /dev/cdrom /mnt/cdrom || mount /dev/sr0 /mnt/cdrom || mount /dev/sr1 /mnt/cdrom) && (/mnt/cdrom/VBoxLinuxAdditions.run || [ $? -eq 2 ] && /sbin/rcvboxadd quicksetup all)'"
       ],
       "only": ["virtualbox-iso"],
       "execute_command": "sh -c {{ .Path }}"

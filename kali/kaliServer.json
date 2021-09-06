@@ -71,14 +71,14 @@
 
       "type": "virtualbox-iso",
       "output_directory": "output-virtualbox/{{user `vm_name`}}",
-      "guest_os_type": "RedHat_64",
+      "guest_os_type": "Debian_64",
       "guest_additions_mode": "attach",
 
 
       "iso_url": "{{user `kali_iso_url`}}",
       "iso_checksum": "{{user `kali_iso_checksum`}}",
 
-      "boot_command": "{{user `boot_command`}}",
+      "boot_command": "{{user `boot_command`}}<wait4m><enter><wait1m><enter><wait10s><enter>",
 
       "boot_wait": "{{user `boot_wait`}}",
       "shutdown_timeout": "2m",
@@ -97,11 +97,7 @@
       "disk_size": "{{user `disk_size`}}",
         
       
-      "http_directory": "{{user `master_dir`}}/http",
-
-      "vboxmanage": [
-        ["modifyvm", "{{.Name}}", "--vram", "64"]
-      ]
+      "http_directory": "{{user `master_dir`}}/http"
     },
 
 
@@ -166,14 +162,6 @@
         "apt install -y open-vm-tools"
       ],
       "only": ["vmware-iso"],
-      "execute_command": "sh -c {{ .Path }}"
-    },
-    {
-      "type": "shell",
-      "inline": [
-        "mkdir -p /mnt/cdrom; mount /dev/cdrom /mnt/cdrom; /mnt/cdrom/VBoxLinuxAdditions.run"
-      ],
-      "only": ["virtualbox-iso"],
       "execute_command": "sh -c {{ .Path }}"
     }
   ],
