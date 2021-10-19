@@ -26,6 +26,12 @@
     "oracle8_iso_url": "/mnt/iso/oracle8_x86_64-boot.iso",
     "oracle8_iso_checksum": "81ad1eb002f160db90d5e7857ab6632b3e87bcfc77e82fb79edab58f16fda53f",
 
+    "alma8_iso_url": "/mnt/iso/AlmaLinux-8-x86_64-boot.iso",
+    "alma8_iso_checksum": "81ad1eb002f160db90d5e7857ab6632b3e87bcfc77e82fb79edab58f16fda53f",
+
+    "rocky8_iso_url": "/mnt/iso/Rocky-8-x86_64-minimal.iso",
+    "rocky8_iso_checksum": "81ad1eb002f160db90d5e7857ab6632b3e87bcfc77e82fb79edab58f16fda53f",
+
     "ubuntuDesktop_iso_url": "/mnt/iso/ubuntu-20.04.1-live-server-amd64.iso",
     "ubuntuDesktop_iso_checksum": "443511f6bf12402c12503733059269a2e10dec602916c0a75263e5d990f6bb93",
 

@@ -18,17 +18,10 @@
 
     "headless": "true",
 
-    "enter_install_mode":"<enter><wait240>",
-    "choose_defaut_language": "<tab><tab><enter><wait20>",
-    "change_keybord": "<tab><enter><wait10><tab><tab><tab><enter><wait5>French (AZERTY)<tab><tab><enter><right><enter><tab><tab><tab><enter><wait10>",
-    "choose_install_media": "<tab><tab><tab><enter><wait10><enter><wait10>",
-    "minimal_install": "<down><down><space>",
-    "choose_install_type": "<tab><tab><tab><tab><tab><tab><enter><wait10><tab><tab>{{user `minimal_install`}}<altTab><altTab><enter>",
-
     "oracle8_iso_type": "boot",
 
     "boot_wait": "10s",
-    "boot_command": "<tab><bs><bs><bs><bs><bs>text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-{{user `oracle8_iso_type`}}.cfg<enter><wait>"
+    "boot_command": "<tab><bs><bs><bs><bs><bs>text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-{{user `oracle8_iso_type`}}.cfg<enter><wait>"
   },
 
 
@@ -153,6 +146,13 @@
   ],
             
   "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo dnf install -y python3"
+      ],
+      "execute_command": "sh -c {{ .Path }}"
+    },
     {
       "type": "shell",
       "inline": [

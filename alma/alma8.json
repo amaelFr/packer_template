@@ -1,8 +1,8 @@
 {
   "variables": {
 
-    "vm_name":"CentOS8",
-    "vm_description":"CentOS8",
+    "vm_name":"Alma8",
+    "vm_description":"Alma8",
 
     "disk_size": "16384",
     "memory": "8192",
@@ -12,20 +12,16 @@
 
     "shutdown_command": "sudo shutdown",
 
-    "master_dir": "./centos",
+    "master_dir": "./alma",
+
+    "vmware_compatibility": "16",
 
     "headless": "true",
 
-    "enter_install_mode":"<enter><wait240>",
-    "choose_defaut_language": "<tab><tab><enter><wait20>",
-    "change_keybord": "<tab><enter><wait10><tab><tab><tab><enter><wait5>French (AZERTY)<tab><tab><enter><right><enter><tab><tab><tab><enter><wait10>",
-    "choose_install_media": "<tab><tab><tab><enter><wait10><enter><wait10>",
-    "minimal_install": "<down><down><space>",
-    "choose_install_type": "<tab><tab><tab><tab><tab><tab><enter><wait10><tab><tab>{{user `minimal_install`}}<altTab><altTab><enter>",
+    "alma8_iso_type": "boot",
 
-    
     "boot_wait": "10s",
-    "boot_command": "<tab><bs><bs><bs><bs><bs>text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+    "boot_command": "<tab><bs><bs><bs><bs><bs>text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-{{user `alma8_iso_type`}}.cfg<enter><wait>"
   },
 
 
@@ -39,12 +35,12 @@
 
       "type": "vmware-iso",
       "output_directory": "output-vmware/{{user `vm_name`}}",
-      "guest_os_type": "rhel8-64",
-      "version": 16,
+      "guest_os_type": "oraclelinux8-64",
+      "version": "{{user `vmware_compatibility`}}",
 
 
-      "iso_url": "{{user `centos8_iso_url`}}",
-      "iso_checksum": "{{user `centos8_iso_checksum`}}",
+      "iso_url": "{{user `alma8_iso_url`}}",
+      "iso_checksum": "{{user `alma8_iso_checksum`}}",
 
       "boot_command": "{{user `boot_command`}}",
 
@@ -57,7 +53,7 @@
       "communicator": "ssh",
       "ssh_username": "{{user `ssh_user`}}",
       "ssh_password": "{{user `ssh_password`}}",
-      "ssh_timeout": "12m",
+      "ssh_timeout": "20m",
 
 
       "cpus": 2,
@@ -76,12 +72,12 @@
 
       "type": "virtualbox-iso",
       "output_directory": "output-virtualbox/{{user `vm_name`}}",
-      "guest_os_type": "RedHat_64",
+      "guest_os_type": "Oracle_64",
       "guest_additions_mode": "attach",
 
 
-      "iso_url": "{{user `centos8_iso_url`}}",
-      "iso_checksum": "{{user `centos8_iso_checksum`}}",
+      "iso_url": "{{user `alma8_iso_url`}}",
+      "iso_checksum": "{{user `alma8_iso_checksum`}}",
 
       "boot_command": "{{user `boot_command`}}",
 
@@ -102,11 +98,7 @@
       "disk_size": "{{user `disk_size`}}",
         
       
-      "http_directory": "{{user `master_dir`}}/http",
-
-      "vboxmanage": [
-        ["modifyvm", "{{.Name}}", "--vram", "64"]
-      ]
+      "http_directory": "{{user `master_dir`}}/http"
     },
 
 
@@ -118,8 +110,8 @@
       "output_directory": "output-qemu/{{user `vm_name`}}",
 
 
-      "iso_url": "{{user `centos8_iso_url`}}",
-      "iso_checksum": "{{user `centos8_iso_checksum`}}",
+      "iso_url": "{{user `alma8_iso_url`}}",
+      "iso_checksum": "{{user `alma8_iso_checksum`}}",
       
       "boot_command": "{{user `boot_command`}}",
 
@@ -131,7 +123,7 @@
       "communicator": "ssh",
       "ssh_username": "{{user `ssh_user`}}",
       "ssh_password": "{{user `ssh_password`}}",
-      "ssh_timeout": "8m",
+      "ssh_timeout": "20m",
 
       "memory": "{{user `memory`}}",
       "disk_size": "{{user `disk_size`}}",
@@ -144,12 +136,23 @@
       "cpus": 4,
         
       
-      "http_directory": "{{user `master_dir`}}/http"
+      "http_directory": "{{user `master_dir`}}/http",
+
+      "qemuargs": [
+        [ "-drive", "file=output-qemu/{{user `vm_name`}}/{{ .Name }},if=virtio,cache=writeback,discard=ignore,format=qcow2,index=1" ]
+      ]
     }
     
   ],
             
   "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo dnf install -y python3"
+      ],
+      "execute_command": "sh -c {{ .Path }}"
+    },
     {
       "type": "shell",
       "inline": [
@@ -164,6 +167,14 @@
         "sudo sh -c 'mkdir -p /mnt/cdrom && (mount /dev/cdrom /mnt/cdrom || mount /dev/sr0 /mnt/cdrom || mount /dev/sr1 /mnt/cdrom) && (/mnt/cdrom/VBoxLinuxAdditions.run || [ $? -eq 2 ] && /sbin/rcvboxadd quicksetup all)'"
       ],
       "only": ["virtualbox-iso"],
+      "execute_command": "sh -c {{ .Path }}"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo dnf install -y qemu-guest-agent"
+      ],
+      "only": ["qemu"],
       "execute_command": "sh -c {{ .Path }}"
     }
   ],

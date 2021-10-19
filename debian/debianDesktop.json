@@ -152,8 +152,8 @@
       "type": "shell",
       "inline": [
         "sudo apt update && sudo apt -y upgrade",
-        "sudo apt install -y  lxqt-core sddm",
-        "sudo apt dist-upgrade -y"
+        "sudo apt dist-upgrade -y",
+        "sudo apt install -y  lxqt-core sddm ||  sudo apt update && sudo apt -y upgrade && sudo apt install -y  lxqt-core sddm"
       ],
       "execute_command": "sh -c {{ .Path }}"
     },
